@@ -1,6 +1,7 @@
 var target = Argument("Target", "Pack");
 var package = "MSBuild.SonarQube.Runner.Tool";
-var version = "2.2.0.24";
+var version = "1.0.0";
+var toolVersion = "2.2.0.24";
 
 Task("Pack")
     .Does(() => {
@@ -12,11 +13,12 @@ Task("Pack")
                             Id                      = package,
                             Version                 = version,
                             Title                   = package,
-                            Authors                 = new[] {"Isatis Health"},
-                            Owners                  = new[] {"Isatis Health"},
+                            Authors                 = new[] {"Tom Staijen"},
+                            Owners                  = new[] {"Tom Staijen"},
                             Description             = "Nuget tool package for MSBUild.SonarQube.Runner",
-                            Summary                 = "Because the other people forgot to make it",
-                            ProjectUrl              = new Uri("http://t.staijen@git.ncontrol.local:8080/scm/tool/msbuild.sonarqube.runner.tool.git"),
+                            Summary                 = "Contains the runner with version " + toolVersion,
+                            ProjectUrl              = new Uri("https://github.com/AgileArchitect/MSBuild.SonarQube.Runner.Tool"),
+                            LicenseUrl              = new Uri("https://github.com/AgileArchitect/MSBuild.SonarQube.Runner.Tool/blob/master/LICENCE"),
                             RequireLicenseAcceptance= false,
                             Symbols                 = false,
                             NoPackageAnalysis       = true,
@@ -36,9 +38,12 @@ Task("Push")
     .Does(() => {
         var package = "./nuget/MSBuild.SonarQube.Runner.Tool." + version + ".nupkg";
         
+        var source = Argument("source", "");
+        var apikey = Argument("apikey", "");
+
         NuGetPush(package, new NuGetPushSettings {
-            Source = "http://teamcity.ncontrol.local:8222/nuget",
-            ApiKey = "abcdef"
+            Source = source,
+            ApiKey = apikey
         });
     });
 
