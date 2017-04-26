@@ -46,7 +46,7 @@ Task("Push")
     });
 
 Task("AppVeyor")
-    .IsDependentOn("Pack")
+    .IsDependentOn("Pack");
 
 Task("Default")
     .IsDependentOn("Pack");
