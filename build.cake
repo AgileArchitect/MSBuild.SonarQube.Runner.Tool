@@ -1,6 +1,6 @@
-var target = Argument("Target", "Pack");
-var apikey = Argument("apikey", "");
-var source = Argument("source", "");
+#addin "Cake.Git"
+
+var target = Argument("target", "Default");
 var package = "MSBuild.SonarQube.Runner.Tool";
 
 var local = BuildSystem.IsLocalBuild;
