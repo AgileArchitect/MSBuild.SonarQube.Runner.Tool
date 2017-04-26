@@ -2,8 +2,23 @@ var target = Argument("Target", "Pack");
 var apikey = Argument("apikey", "");
 var source = Argument("source", "");
 var package = "MSBuild.SonarQube.Runner.Tool";
+
+var local = BuildSystem.IsLocalBuild;
+var isRunningOnAppVeyor = AppVeyor.IsRunningOnAppVeyor;
+var isPullRequest = AppVeyor.Environment.PullRequest.IsPullRequest;
+var buildNumber = AppVeyor.Environment.Build.Number;
+
+
+var branchName = isRunningOnAppVeyor ? EnvironmentVariable("APPVEYOR_REPO_BRANCH") : GitBranchCurrent(DirectoryPath.FromString(".")).FriendlyName;
+var isMasterBranch = System.String.Equals("master", branchName, System.StringComparison.OrdinalIgnoreCase);
+
+///////////////////////////////////////////////////////////////////////////////
+// VERSION
+///////////////////////////////////////////////////////////////////////////////
+
 var version = "2.3.1";
 var toolVersion = "2.3.1.554";
+var semVersion = local ? version : (version + string.Concat("+", buildNumber));
 
 Task("Pack")
     .Does(() => {
@@ -34,19 +49,37 @@ Task("Pack")
     	NuGetPack(nuGetPackSettings);
     });
 
-Task("Push")
-    .WithCriteria(() => !String.IsNullOrEmpty(apikey))
-    .Does(() => {
-        var package = "./nuget/MSBuild.SonarQube.Runner.Tool." + version + ".nupkg";        
+Task("Publish")
+	.IsDependentOn("Pack")
+    .WithCriteria(() => isRunningOnAppVeyor)
+    .WithCriteria(() => !isPullRequest)
+    .WithCriteria(() => isMasterBranch)
+	.Does(() => {
+		
+	    var apiKey = EnvironmentVariable("NUGET_API_KEY");
 
-        NuGetPush(package, new NuGetPushSettings {
-            Source = source,
-            ApiKey = apikey
-        });
-    });
+    	if(string.IsNullOrEmpty(apiKey))    
+        	throw new InvalidOperationException("Could not resolve Nuget API key.");
+		
+		var p = "./nuget/" + package + "." + version + ".nupkg";
+            
+		// Push the package.
+		NuGetPush(p, new NuGetPushSettings {
+    		Source = "https://www.nuget.org/api/v2/package",
+    		ApiKey = apiKey
+		});
+	});
+
+Task("Update-AppVeyor-Build-Number")
+    .WithCriteria(() => isRunningOnAppVeyor)
+    .Does(() =>
+{
+    AppVeyor.UpdateBuildVersion(semVersion);
+});
 
 Task("AppVeyor")
-    .IsDependentOn("Pack");
+	.IsDependentOn("Update-AppVeyor-Build-Number")
+	.IsDependentOn("Publish");
 
 Task("Default")
     .IsDependentOn("Pack");
