@@ -1,11 +1,12 @@
 var target = Argument("Target", "Pack");
+var apikey = Argument("apikey", "");
+var source = Argument("source", "");
 var package = "MSBuild.SonarQube.Runner.Tool";
-var version = "1.0.0";
-var toolVersion = "2.2.0.24";
+var version = "2.3.1";
+var toolVersion = "2.3.1.554";
 
 Task("Pack")
     .Does(() => {
-
 	    CreateDirectory("nuget");
 	    CleanDirectory("nuget");
 
@@ -31,15 +32,12 @@ Task("Pack")
                         };
 
     	NuGetPack(nuGetPackSettings);
-
     });
 
 Task("Push")
+    .WithCriteria(() => !String.IsNullOrEmpty(apikey))
     .Does(() => {
-        var package = "./nuget/MSBuild.SonarQube.Runner.Tool." + version + ".nupkg";
-        
-        var source = Argument("source", "");
-        var apikey = Argument("apikey", "");
+        var package = "./nuget/MSBuild.SonarQube.Runner.Tool." + version + ".nupkg";        
 
         NuGetPush(package, new NuGetPushSettings {
             Source = source,
