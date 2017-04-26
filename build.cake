@@ -15,7 +15,7 @@ Task("Pack")
                             Version                 = version,
                             Title                   = package,
                             Authors                 = new[] {"Tom Staijen"},
-                            Owners                  = new[] {"Tom Staijen"},
+                            Owners                  = new[] {"Tom Staijen", "cake-contrib"},
                             Description             = "Nuget tool package for MSBUild.SonarQube.Runner",
                             Summary                 = "Contains the runner with version " + toolVersion,
                             ProjectUrl              = new Uri("https://github.com/AgileArchitect/MSBuild.SonarQube.Runner.Tool"),
@@ -44,6 +44,9 @@ Task("Push")
             ApiKey = apikey
         });
     });
+
+Task("AppVeyor")
+    .IsDependentOn("Pack")
 
 Task("Default")
     .IsDependentOn("Pack");
