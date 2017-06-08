@@ -1,10 +1,9 @@
 #!/bin/sh
 #
-# SonarQube Scanner Startup Script for Unix
+# SonarQube Runner Startup Script for Unix
 #
 # Optional ENV vars:
-#   SONAR_SCANNER_OPTS - Parameters passed to the Java VM when running SonarQube Scanner
-#   SONAR_SCANNER_DEBUG_OPTS - Extra parameters passed to the Java VM for debugging
+#   SONAR_RUNNER_OPTS - Parameters passed to the Java VM when running Sonar
 #   JAVA_HOME - Location of Java's installation
 
 real_path () {
@@ -23,6 +22,8 @@ real_path () {
   )
 }
 
+echo WARN: 'sonar-runner' script is deprecated. Please use 'sonar-scanner' instead.
+
 script_path="$0"
 
 if [ -h "$script_path" ] ; then
@@ -30,23 +31,18 @@ if [ -h "$script_path" ] ; then
   script_path=$(real_path "$script_path")
 fi
 
-sonar_scanner_home=$(dirname "$script_path")/..
+sonar_runner_home=$(dirname "$script_path")/..
 
 # make it fully qualified
-sonar_scanner_home=$(cd "$sonar_scanner_home" && pwd -P)
+sonar_runner_home=$(cd "$sonar_runner_home" && pwd)
 
-jar_file=$sonar_scanner_home/lib/sonar-scanner-cli-3.0.1.733.jar
+jar_file=$sonar_runner_home/lib/sonar-scanner-cli-3.0.3.778.jar
 
-# check that sonar_scanner_home has been correctly set
+# check that sonar_runner_home has been correctly set
 if [ ! -f "$jar_file" ] ; then
   echo "File does not exist: $jar_file"
-  echo "'$sonar_scanner_home' does not point to a valid installation directory: $sonar_scanner_home"
+  echo "'$sonar_runner_home' does not point to a valid installation directory: $sonar_runner_home"
   exit 1
-fi
-
-use_embedded_jre=false
-if [ "$use_embedded_jre" = true ]; then
-  export JAVA_HOME=$sonar_scanner_home/jre
 fi
 
 if [ -n "$JAVA_HOME" ]
@@ -56,9 +52,17 @@ else
   java_cmd="$(which java)"
 fi
 
+if [ -n "$SONAR_RUNNER_OPTS" ] ;
+then
+  echo WARN: '$SONAR_RUNNER_OPTS' is deprecated. Please use '$SONAR_SCANNER_OPTS' instead.
+  if [ -z "$SONAR_SCANNER_OPTS" ] ; then
+    SONAR_SCANNER_OPTS=$SONAR_RUNNER_OPTS
+  fi
+fi
+
 project_home=$(pwd)
 
-#echo "Info: Using sonar-scanner at $sonar_scanner_home"
+#echo "Info: Using sonar-runner at $sonar_runner_home"
 #echo "Info: Using java at $java_cmd"
 #echo "Info: Using classpath $jar_file"
 #echo "Info: Using project $project_home"
@@ -66,9 +70,8 @@ project_home=$(pwd)
 exec "$java_cmd" \
   -Djava.awt.headless=true \
   $SONAR_SCANNER_OPTS \
-  $SONAR_SCANNER_DEBUG_OPTS \
-  -classpath  "$jar_file" \
-  -Dscanner.home="$sonar_scanner_home" \
+  -classpath "$jar_file" \
+  -Dscanner.home="$sonar_runner_home" \
   -Dproject.home="$project_home" \
   org.sonarsource.scanner.cli.Main "$@"
 
