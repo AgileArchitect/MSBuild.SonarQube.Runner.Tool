@@ -122,6 +122,12 @@
     <Message Importance="high" Text="Skipping dumping compile outputs because SonarQubeTempPath has not been specified" />
   </Target>
 
+  <Target Name="FailIfLowerThanMSBuild14"
+          Condition=" $(SonarQubeTempPath) != '' AND $(MSBuildToolsVersion) != '14.0' AND $(MSBuildToolsVersion) != '15.0'"
+          BeforeTargets="Build">
+    <Error Text="SonarQube analysis is only supported with MSBuild 14 or MSBuild 15" />
+  </Target>
+
   <!-- **************************************************************************** -->
   <!-- Categorise as a product or test project -->
   <!-- **************************************************************************** -->
@@ -139,11 +145,6 @@
     -->
   <Target Name="SonarQubeCategoriseProject"
           Condition=" $(SonarQubeTempPath) != '' ">
-
-    <!-- SONARMSBRU-235: Exclude SQL Server projects which imported Microsoft.Data.Tools.Schema.SqlTasks.targets -->
-    <PropertyGroup>
-      <SonarQubeExclude Condition=" $(SqlTargetName) != '' ">true</SonarQubeExclude>
-    </PropertyGroup>
 
     <!-- Fakes detection -->
     <PropertyGroup>
@@ -205,7 +206,7 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="CleanProjectFolders" AfterTargets="Clean" Condition=" $(SonarQubeTempPath) != '' ">
+  <Target Name="CleanProjectFolders" AfterTargets="Clean" BeforeTargets="CreateProjectSpecificDirs" Condition=" $(SonarQubeTempPath) != '' ">
     <ItemGroup>
       <ProjectSpecificOutFiles Include="$(SonarQubeOutputPath)\$(MSBuildProjectName)_*\*.*"/>
       <ProjectSpecificOutDirs Include="@(ProjectSpecificOutFiles->'%(RootDir)%(Directory)'->Distinct())" />
