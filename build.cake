@@ -16,8 +16,8 @@ var isMasterBranch = System.String.Equals("master", branchName, System.StringCom
 // VERSION
 ///////////////////////////////////////////////////////////////////////////////
 
-var version = "4.6.0";
-var toolVersion = "4.6.0.1930";
+var version = "4.8.0";
+var toolVersion = "4.8.0.12008";
 var semVersion = local ? version : (version + string.Concat("+", buildNumber));
 
 Task("Pack")
